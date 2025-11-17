@@ -16,6 +16,9 @@ export default function HomePage() {
         <Link href="/list" className="btn btn-primary mt-3">
           Pergi ke List Pokemon
         </Link>
+        <Link href="/explore" className="btn btn-secondary mt-3">
+          Explore Public Pokemon API
+        </Link>
       </Card>
     </Container>
   );

@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { Container, Card } from "react-bootstrap";
 
@@ -42,6 +43,10 @@ export default function ExplorePage() {
           <small>API URL: {p.url}</small>
         </Card>
       ))}
+
+      <Link href="/" className="btn btn-secondary mt-3">
+        Kembali ke Home
+      </Link>
     </Container>
   );
 }
