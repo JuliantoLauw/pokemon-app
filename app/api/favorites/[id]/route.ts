@@ -1,82 +1,45 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 
-export async function GET(
-  request: Request,
-  { params }: { params: { id: string } }
-) {
-  try {
-    const id = Number(params.id);
+export async function GET(req: Request, context: { params: Promise<{ id: string }> }) {
+  const { id } = await context.params;
 
-    if (isNaN(id)) {
-      return NextResponse.json({ error: "ID tidak valid" }, { status: 400 });
-    }
-
-    const item = await prisma.favorite.findUnique({
-      where: { id },
-    });
-
-    if (!item) {
-      return NextResponse.json(
-        { error: "Data tidak ditemukan" },
-        { status: 404 }
-      );
-    }
-
-    return NextResponse.json(item);
-  } catch (error) {
-    console.error("GET Error:", error);
-    return NextResponse.json({ error: "Server error" }, { status: 500 });
+  const idNumber = Number(id);
+  if (isNaN(idNumber)) {
+    return NextResponse.json({ error: "ID invalid" }, { status: 400 });
   }
+
+  const item = await prisma.favorite.findUnique({
+    where: { id: idNumber },
+  });
+
+  if (!item) {
+    return NextResponse.json({ error: "Data tidak ditemukan" }, { status: 404 });
+  }
+
+  return NextResponse.json(item);
 }
 
-export async function PUT(
-  request: Request,
-  { params }: { params: { id: string } }
-) {
-  try {
-    const id = Number(params.id);
+export async function PUT(req: Request, context: { params: Promise<{ id: string }> }) {
+  const { id } = await context.params;
+  const idNumber = Number(id);
+  if (isNaN(idNumber)) return NextResponse.json({ error: "ID invalid" }, { status: 400 });
 
-    if (isNaN(id)) {
-      return NextResponse.json({ error: "ID tidak valid" }, { status: 400 });
-    }
+  const data = await req.json();
 
-    const body = await request.json();
+  const updated = await prisma.favorite.update({
+    where: { id: idNumber },
+    data,
+  });
 
-    const updated = await prisma.favorite.update({
-      where: { id },
-      data: {
-        title: body.title,
-        content: body.content,
-      },
-    });
-
-    return NextResponse.json(updated);
-  } catch (error) {
-    console.error("PUT Error:", error);
-    return NextResponse.json({ error: "Server error" }, { status: 500 });
-  }
+  return NextResponse.json(updated);
 }
 
-// DELETE /api/favorites/:id
-export async function DELETE(
-  request: Request,
-  { params }: { params: { id: string } }
-) {
-  try {
-    const id = Number(params.id);
+export async function DELETE(req: Request, context: { params: Promise<{ id: string }> }) {
+  const { id } = await context.params;
+  const idNumber = Number(id);
+  if (isNaN(idNumber)) return NextResponse.json({ error: "ID invalid" }, { status: 400 });
 
-    if (isNaN(id)) {
-      return NextResponse.json({ error: "ID tidak valid" }, { status: 400 });
-    }
-
-    await prisma.favorite.delete({
-      where: { id },
-    });
-
-    return NextResponse.json({ message: "Deleted" });
-  } catch (error) {
-    console.error("DELETE Error:", error);
-    return NextResponse.json({ error: "Server error" }, { status: 500 });
-  }
+  await prisma.favorite.delete({ where: { id: idNumber } });
+  return NextResponse.json({ message: "Deleted" });
 }

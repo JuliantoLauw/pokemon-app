@@ -14,42 +14,62 @@ interface Favorite {
 export default function DetailPage() {
   const { id } = useParams();
   const router = useRouter();
-
   const [item, setItem] = useState<Favorite | null>(null);
-
-  const fetchDetail = async () => {
-    const res = await fetch(`/api/favorites/${id}`);
-    const data = await res.json();
-    setItem(data);
-  };
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (!id) return;
+    const fetchDetail = async () => {
+      try {
+        console.log("Fetching favorite with id:", id);
+        const res = await fetch(`/api/favorites/${id}`);
+        if (!res.ok) {
+          setItem(null);
+          return;
+        }
+        const data: Favorite = await res.json();
+        setItem(data);
+      } catch (err) {
+        console.error("Fetch error:", err);
+        setItem(null);
+      } finally {
+        setLoading(false);
+      }
+    };
     fetchDetail();
-  }, []);
+  }, [id]);
 
-  if (!item) return <p>Loading...</p>;
+  const handleDelete = async () => {
+    if (!id) return;
+    try {
+      const res = await fetch(`/api/favorites/${id}`, { method: "DELETE" });
+      if (!res.ok) throw new Error("Delete gagal");
+      router.push("/list");
+    } catch (err) {
+      console.error("Delete error:", err);
+      alert("Terjadi kesalahan saat menghapus data.");
+    }
+  };
+
+  if (loading) return <p>Loading...</p>;
+  if (!item) return <p>Data tidak ditemukan.</p>;
 
   return (
-    <Container className='py-4'>
+    <Container className="py-4">
       <h2>{item.title}</h2>
       <p>{item.content}</p>
 
-      <Link href={`/edit/${item.id}`} className='btn btn-warning me-2'>
+      <Link href={`/edit/${item.id}`} className="btn btn-warning me-2">
         Edit
       </Link>
 
-      <Button
-        variant='danger'
-        onClick={async () => {
-          await fetch(`/api/favorites/${id}`, { method: "DELETE" });
-          router.push("/list");
-        }}
-      >
+      <Button variant="danger" onClick={handleDelete}>
         Hapus
       </Button>
 
-      <br /><br />
-      <Link href='/list' className='btn btn-secondary'>
+      <br />
+      <br />
+      <Link href="/list" className="btn btn-secondary">
         Kembali
       </Link>
     </Container>

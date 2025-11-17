@@ -16,28 +16,58 @@ export default function EditPage() {
 
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
-
-  const fetchDetail = async () => {
-    const res = await fetch(`/api/favorites/${id}`);
-    const data: Favorite = await res.json();
-    setTitle(data.title);
-    setContent(data.content);
-  };
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (!id) return;
+    const fetchDetail = async () => {
+      try {
+        console.log("Fetching favorite for edit with id:", id);
+        const res = await fetch(`/api/favorites/${id}`);
+        if (!res.ok) {
+          alert("Data tidak ditemukan");
+          setLoading(false);
+          return;
+        }
+        const data: Favorite = await res.json();
+        setTitle(data.title);
+        setContent(data.content);
+      } catch (err) {
+        console.error("Fetch error:", err);
+        alert("Terjadi kesalahan saat mengambil data.");
+      } finally {
+        setLoading(false);
+      }
+    };
     fetchDetail();
-  }, []);
+  }, [id]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!id) return;
 
-    await fetch(`/api/favorites/${id}`, {
-      method: "PUT",
-      body: JSON.stringify({ title, content }),
-    });
+    try {
+      const res = await fetch(`/api/favorites/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title, content }),
+      });
 
-    router.push("/list");
+      const data = await res.json();
+
+      if (!res.ok) {
+        alert(data?.error || "Update gagal");
+        return;
+      }
+
+      router.push(`/detail/${id}`);
+    } catch (err) {
+      console.error("Update error:", err);
+      alert("Terjadi kesalahan saat update data.");
+    }
   };
+
+  if (loading) return <p>Loading...</p>;
 
   return (
     <Container className="py-4">
